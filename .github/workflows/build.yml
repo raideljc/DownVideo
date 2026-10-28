@@ -20,32 +20,16 @@ jobs:
         id: date
         run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
-      # ========== CACHÉ ==========
-      - name: Cache Buildozer directory
-        uses: actions/cache@v4
+      # ========== CACHÉ MEJORADO ==========
+      - name: Restore Buildozer cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.buildozer
-          key: buildozer-${{ runner.os }}-${{ env.date }}
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
           restore-keys: |
             buildozer-${{ runner.os }}-
 
-      - name: Cache Android SDK
-        uses: actions/cache@v4
-        with:
-          path: ~/.buildozer/android/platform/android-sdk
-          key: ${{ runner.os }}-android-sdk-${{ env.date }}
-          restore-keys: |
-            ${{ runner.os }}-android-sdk-
-
-      - name: Cache Android NDK
-        uses: actions/cache@v4
-        with:
-          path: ~/.buildozer/android/platform/android-ndk
-          key: ${{ runner.os }}-android-ndk-${{ env.date }}
-          restore-keys: |
-            ${{ runner.os }}-android-ndk-
-
-      # ========== INSTALAR DEPENDENCIAS DEL SISTEMA ==========
+      # ========== INSTALAR DEPENDENCIAS ==========
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -65,43 +49,64 @@ jobs:
             automake \
             unzip \
             openjdk-17-jdk-headless \
-            ccache
+            ccache \
+            ninja-build
 
-      # ========== SETUP JAVA ==========
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # ========== SETUP PYTHON ==========
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           cache: 'pip'
 
-      # ========== INSTALAR BUILDOZER ==========
-      - name: Install Python dependencies
+      # ========== INSTALAR HERRAMIENTAS ==========
+      - name: Install buildozer and dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install cython==0.29.36
           pip install buildozer
-          pip install -r requirements.txt
+          pip install -r requirements.txt 2>/dev/null || echo "No requirements.txt found"
+          
+      # ========== LIMPIAR CACHÉ SI ES NECESARIO ==========
+      - name: Check buildozer cache size
+        run: |
+          du -sh ~/.buildozer 2>/dev/null || echo "No cache yet"
 
-      # ========== COMPILAR DEBUG APK ==========
+      # ========== COMPILAR CON LOGS DETALLADOS ==========
       - name: Build APK (Debug)
         id: buildozer
         run: |
-          yes | buildozer -v android debug 2>&1 | tee build.log
-          APK_FILE=$(ls -t bin/*.apk 2>/dev/null | head -1)
-          if [ -z "$APK_FILE" ]; then
-            echo "Error: APK not found!"
+          set -e
+          echo "🔨 Starting Buildozer compilation..."
+          buildozer -v android debug 2>&1 | tee build.log
+          
+          # Verificar que se creó el APK
+          if [ ! -d "bin" ] || [ -z "$(ls bin/*.apk 2>/dev/null)" ]; then
+            echo "❌ APK not created. Checking buildozer cache..."
+            du -sh ~/.buildozer/android 2>/dev/null || true
+            echo "Last 100 lines of build log:"
+            tail -100 build.log
             exit 1
           fi
+          
+          APK_FILE=$(ls -t bin/*.apk 2>/dev/null | head -1)
+          echo "✅ APK created: $APK_FILE"
           echo "apk_path=$APK_FILE" >> $GITHUB_OUTPUT
           echo "apk_name=$(basename $APK_FILE)" >> $GITHUB_OUTPUT
-          echo "✅ APK built successfully: $APK_FILE"
+          ls -lah bin/
+
+      # ========== GUARDAR CACHÉ ==========
+      - name: Save Buildozer cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ~/.buildozer
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
 
       # ========== SUBIR ARTEFACTOS ==========
       - name: Upload APK artifact
@@ -112,27 +117,33 @@ jobs:
           path: bin/*.apk
           retention-days: 30
 
-      # ========== CREAR RELEASE (SI ES TAG) ==========
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: build.log
+          retention-days: 7
+
+      # ========== CREAR RELEASE ==========
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && success()
         uses: softprops/action-gh-release@v1
         with:
           files: bin/*.apk
           draft: false
           prerelease: false
-          body: |
-            ## APK Release
-            Build: ${{ github.run_number }}
-            Commit: ${{ github.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ========== NOTIFICACIÓN ==========
-      - name: Build Status
+      # ========== NOTIFICACIÓN FINAL ==========
+      - name: Build Summary
         if: always()
         run: |
-          if [ ${{ job.status }} = 'success' ]; then
-            echo "✅ Build completed successfully!"
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          if [ -f "bin/*.apk" ]; then
+            echo "✅ APK Generated Successfully" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ Build failed!"
+            echo "❌ Build Failed" >> $GITHUB_STEP_SUMMARY
           fi
