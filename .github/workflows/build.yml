@@ -7,7 +7,11 @@ on:
 
 jobs:
   build-android:
-    runs-on: ubuntu-latest
+    # Opción A: Usar Ubuntu 24.04 (más reciente y aún soportado)
+    runs-on: ubuntu-24.04
+    
+    # Opción B: Usar Ubuntu 22.04 (más antiguo, pero el PPA sí existe)
+    # runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout del código
@@ -24,5 +28,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mi-app-apk
-          # La acción anterior expone la ruta del archivo generado
           path: ${{ steps.buildozer.outputs.filename }}
