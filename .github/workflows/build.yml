@@ -65,8 +65,8 @@ jobs:
       # ========== DESCARGAR Y CONFIGURAR ANDROID SDK/NDK ==========
       - name: Setup Android SDK
         run: |
-          mkdir -p ~/.buildozer/android/platform
-          cd ~/.buildozer/android/platform
+          mkdir -p .buildozer/android/platform
+          cd .buildozer/android/platform
           
           # Descargar Android SDK
           if [ ! -d "android-sdk" ]; then
@@ -79,13 +79,13 @@ jobs:
           fi
           
           # Configurar SDK
-          export PATH="$PATH:~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin"
-          yes | sdkmanager --sdk_root=~/.buildozer/android/platform/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.0" 2>&1 | grep -v "Warning"
+          export PATH="$PATH:.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin"
+          yes | sdkmanager --sdk_root=.buildozer/android/platform/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.0" 2>&1 | grep -v "Warning"
 
       - name: Setup Android NDK
         run: |
-          mkdir -p ~/.buildozer/android/platform
-          cd ~/.buildozer/android/platform
+          mkdir -p .buildozer/android/platform
+          cd .buildozer/android/platform
           
           # Descargar NDK 25b
           if [ ! -d "android-ndk-r25b" ]; then
@@ -106,21 +106,21 @@ jobs:
       # ========== CONFIGURAR VARIABLES DE ENTORNO ==========
       - name: Configure environment
         run: |
-          echo "ANDROID_HOME=~/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_SDK_ROOT=~/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_NDK=~/.buildozer/android/platform/android-ndk-r25b" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=~/.buildozer/android/platform/android-ndk-r25b" >> $GITHUB_ENV
-          echo "ANDROID_NDK_ROOT=~/.buildozer/android/platform/android-ndk-r25b" >> $GITHUB_ENV
+          echo "ANDROID_HOME= .buildozer/android/platform/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT= .buildozer/android/platform/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_NDK= .buildozer/android/platform/android-ndk-r25b" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME= .buildozer/android/platform/android-ndk-r25b" >> $GITHUB_ENV
+          echo "ANDROID_NDK_ROOT= .buildozer/android/platform/android-ndk-r25b" >> $GITHUB_ENV
           
           # Agregar build-tools al PATH
-          echo "~/.buildozer/android/platform/android-sdk/build-tools/33.0.0:$PATH" >> $GITHUB_ENV
+          echo ".buildozer/android/platform/android-sdk/build-tools/33.0.0:$PATH" >> $GITHUB_ENV
 
       # ========== LIMPIAR CACHÉ ANTERIOR SI ES NECESARIO ==========
       - name: Clean old buildozer cache
         run: |
           # Limpiar distribuciones viejas para ahorrar espacio
-          rm -rf ~/.buildozer/android/platform/build* 2>/dev/null || true
-          du -sh ~/.buildozer/android 2>/dev/null || echo "Cache empty"
+          rm -rf .buildozer/android/platform/build* 2>/dev/null || true
+          du -sh .buildozer/android 2>/dev/null || echo "Cache empty"
 
       # ========== COMPILAR APK ==========
       - name: Build APK (Debug)
@@ -128,7 +128,7 @@ jobs:
         run: |
           set -e
           
-          export PATH="~/.buildozer/android/platform/android-sdk/build-tools/33.0.0:~/.buildozer/android/platform/android-sdk/platform-tools:$PATH"
+          export PATH=".buildozer/android/platform/android-sdk/build-tools/33.0.0:~/.buildozer/android/platform/android-sdk/platform-tools:$PATH"
           
           echo "🔨 Starting Buildozer compilation..."
           echo "Android SDK: $ANDROID_SDK_ROOT"
