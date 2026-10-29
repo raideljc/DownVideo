@@ -36,6 +36,7 @@ jobs:
       - name: Clean previous build
         run: |
           rm -rf .buildozer
+          rm -rf $HOME/.buildozer
 
       - name: Build APK
         run: |
