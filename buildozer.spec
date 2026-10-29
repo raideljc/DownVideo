@@ -5,13 +5,8 @@ package.domain = org.raideljc
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,json,ttf
 version = 0.1
-
-requirements = python3==3.10,kivy
-android.ndk = 25b
-
+requirements = python3,kivy
 orientation = portrait
-fullscreen = 0
-
 android.api = 33
 android.minapi = 21
 android.ndk = 25b
