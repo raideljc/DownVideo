@@ -3,29 +3,39 @@ name: Build APK Basica
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch: # Permite ejecutarlo manualmente desde la pestaña Actions
+  workflow_dispatch:
 
 jobs:
   build-android:
-    # Opción A: Usar Ubuntu 24.04 (más reciente y aún soportado)
     runs-on: ubuntu-24.04
-    
-    # Opción B: Usar Ubuntu 22.04 (más antiguo, pero el PPA sí existe)
-    # runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name: Compilar con Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - name: Configurar Python
+        uses: actions/setup-python@v5
         with:
-          command: buildozer android debug
-          buildozer_version: stable
+          python-version: '3.9'
+
+      - name: Instalar dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+
+      - name: Instalar Buildozer y Cython
+        run: |
+          pip3 install --user --upgrade buildozer Cython virtualenv
+
+      - name: Compilar APK con Buildozer
+        run: |
+          export PATH=$PATH:~/.local/bin/
+          export APP_ANDROID_ACCEPT_SDK_LICENSE=1
+          export BUILDOZER_WARN_ON_ROOT=0
+          buildozer android debug
 
       - name: Subir APK como Artefacto
         uses: actions/upload-artifact@v4
         with:
           name: mi-app-apk
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
