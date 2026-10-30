@@ -1,0 +1,456 @@
+#:import NoTransition kivy.uix.screenmanager.NoTransition
+<VaulTopbar@MDTopAppBar>:
+    type: "top"
+    elevation: 4
+    pos_hint: {"top": 1}
+            #title: "Vaul"
+    elevation: 4
+    left_action_items: [["login", lambda x: app.ChangeScreenVaul('loginvaul')]]
+    right_action_items: [["theme-light-dark", lambda x: app.toggle_dark_mode(not app.darkmode)], ["logout", lambda x: app.ChangeScreenMain("MainScreen")]]
+
+    #right_action_items: [["login", lambda x: app.ChangeScreenVaul('loginvaul')]]
+    md_bg_color: app.theme_cls.primary_color
+
+
+#=========================================================
+<VaulNavBar@MDCard>:
+    size_hint_y: None
+    height: dp(56)
+    padding: dp(8)
+    spacing: dp(8)
+    radius: [5, 5, 30, 30]
+    md_bg_color: app.theme_cls.bg_normal
+    MDChip:
+        md_bg_color:app.theme_cls.primary_color
+        on_release: app.ChangeScreenVaul('mainvaul')
+        MDChipLeadingIcon:
+            icon: "view-grid"
+        MDChipText:
+            text: "Todos"
+    MDChip:
+        md_bg_color:app.theme_cls.primary_color
+        on_release: app.ChangeScreenVaul('imgvaul')
+        MDChipLeadingIcon:
+            icon: "image"
+        MDChipText:
+            text: "Imágenes"
+    MDChip:
+        md_bg_color:app.theme_cls.primary_color
+        on_release: app.ChangeScreenVaul('videovaul')
+        MDChipLeadingIcon:
+            icon: "video"
+        MDChipText:
+            text: "Videos"
+
+#=========================================================
+<MainVaul>:
+  #  canvas:
+#        Color:
+#            rgb: .7, .7, 1
+#        Rectangle:
+#            source: 'data/images/background.jpg'
+#            size: self.size
+    BoxLayout:
+        orientation: "vertical"
+        VaulTopbar:
+        MDScreenManager:
+            transition: NoTransition()
+            id: smvaul
+            LoginVaul:
+                name: 'loginvaul'
+            Minivaul:
+                name: 'mainvaul'
+            Imgvaul:
+                name: 'imgvaul'
+            Videovaul:
+                name: 'videovaul'
+            Vaulwait:
+                name: 'vaulwait'
+            Histovaul:
+                name: 'histovaul'
+
+                
+#=========================================================
+<LoginVaul>:
+    MDBoxLayout:
+        orientation: "vertical"
+        MDBoxLayout:
+            padding: dp(12)
+            spacing: dp(12)
+            MDCard:
+                orientation: "vertical"
+                size_hint: 0.9, 0.5
+                pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                padding: dp(20)
+                spacing: dp(30)
+                radius: [20, 20, 20, 20]
+                elevation: 4
+                MDLabel:
+                    text: "Iniciar sesión"
+                    font_style: "H4"
+                    bold: True
+                    halign: "center"
+                    size_hint_y: .2
+                MDBoxLayout:
+                    spacing: dp(8)
+                    size_hint_y: .3
+                    MDTextField:
+                        size_hint_x: .9
+                        text: app.path
+                        readonly: True
+                        multiline: True
+                        hint_text: "Carpeta"
+                        mode: "rectangle"
+#                        icon_right: "folder"
+                    MDIconButton
+                        size_hint_x: .1
+                        icon: "folder-search"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color
+                        on_release: root.changepath()
+                MDTextField:
+                    size_hint_y: .2
+                    id: pwtxt
+                    hint_text: 'Contraseña'
+                    password: True
+                    multiline: False
+                    mode: "rectangle"
+                    icon_right: "lock"
+                    on_text: root.key_down(self.text)
+                MDRaisedButton:
+                    text: 'INGRESAR'
+                    size_hint: 1, .2
+                    md_bg_color: app.theme_cls.primary_color
+                    on_release: root.aceptlogin()  
+
+
+#=========================================================       
+
+<ItemVaul>:       
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: dp(60)
+    padding: dp(8)
+    spacing: dp(1)
+    elevation: 0
+    md_bg_color: root.color
+    MDIcon:
+        icon: root.icon
+        size_hint_x: 0.1
+        pos_hint: {"center_y": 0.5}
+    MDLabel:      
+        size_hint: (0.7, None)
+        text: root.file
+        font_style: "Caption"
+        pos_hint: {"center_y": 0.5}
+#        halign: 'center'
+        valign: 'middle'
+        height: self.texture_size[1]
+    MDBoxLayout:
+        size_hint_x: 0.17
+        MDIconButton:
+            pos_hint: {"center_y": 0.5}
+            icon: "download"
+            size_hint_x: 0.5
+            on_release: root.dwitem()
+        MDIconButton:
+            icon: "delete"
+            pos_hint: {"center_y": 0.5}
+            size_hint_x: 0.5
+            on_release: root.delitem()
+
+#=========================================================       
+<Minivaul>:
+    MDBoxLayout:
+        orientation: "vertical"
+        VaulNavBar:
+        MDCard:
+            size_hint: (0.99, None)
+            pos_hint: {"center_x": 0.5}
+            height: "56dp"
+            radius: [0, 0, 16, 16]
+            MDTextField:
+                text: app.path
+                readonly: True
+                mode: "fill"
+                fill_color_normal: app.theme_cls.bg_dark
+            MDIconButton:
+                icon: "arrow-up-bold"
+                theme_icon_color: "Custom"
+                icon_color: app.theme_cls.primary_color
+                on_release: root.upfile()
+        MDSeparator:
+            color: app.theme_cls.divider_color
+            size_hint_y:None
+            height: "2dp"
+        MDBoxLayout:
+            padding: dp(5)
+            spacing: dp(12)
+            orientation: "vertical"
+            MDRecycleView:
+                id: rv_vaul
+                viewclass: "ItemVaul"
+                RecycleBoxLayout:
+                    spacing: dp(3)
+                    padding: dp(1)
+                    orientation: 'vertical'
+                    default_size: None, dp(48)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height  
+
+
+
+#=========================================================              
+<Imgvaul>:
+    MDBoxLayout:
+        orientation: "vertical"
+        VaulNavBar:
+        MDBoxLayout:
+            padding: dp(12)
+            spacing: dp(12)
+            AnchorLayout:
+                anchor_x: "right"
+                anchor_y: "top"
+                MDCard:
+                    padding: dp(5)
+                    Carousel:
+                        id: carousel
+                        loop: True
+                        on_index: root.complete(self, args[1])
+                        Image:
+                            source: ""
+                            id: img1
+                        Image:
+                            source: ""
+                            id: img2
+                        Image:
+                            source: ""
+                            id: img3
+                MDIconButton:
+                    icon: "download"
+                    theme_icon_color: "Custom"
+                    icon_color: app.theme_cls.primary_color
+                    on_release: root.downimg()
+        MDCard:
+            size_hint_y: None
+            height: dp(56)
+            radius: [16, 16, 16, 16]
+            padding: dp(8)
+            spacing: dp(8)
+            MDIconButton:
+                icon: "chevron-left"
+                disabled: root.imgid <= 0
+                on_release: carousel.load_previous()
+            MDBoxLayout:
+                orientation: "vertical" 
+                MDLabel:   
+                    halign: "center" 
+                    valign: "middle"
+                    text: f"{root.imgnom}"
+                MDBoxLayout:
+                    MDLabel:
+                        halign: "center"
+                        valign: "middle"
+                        text: f"{root.imgid+1}/{root.imglen}"
+                    MDIconButton:
+                        icon: "chevron-right"
+                        disabled: root.imgid + 1 >= root.imglen
+                        on_release: carousel.load_next()
+
+
+
+#=========================================================
+<Videovaul>:
+    MDBoxLayout:
+        orientation: "vertical"
+        VaulNavBar:
+        MDBoxLayout:
+            padding: dp(12)
+            spacing: dp(12)
+            AnchorLayout:
+                anchor_x: "right"
+                anchor_y: "top"
+                MDCard:
+                    padding: dp(5)
+                    VideoPlayer:
+                        id: videoplayer
+                MDIconButton:
+                    icon: "download"
+                    theme_icon_color: "Custom"
+                    icon_color: app.theme_cls.primary_color
+                    on_release: root.downvideo()
+        MDCard:
+            size_hint_y: None
+            height: dp(56)
+            radius: [16, 16, 16, 16]
+            padding: dp(8)
+            spacing: dp(8)
+            MDIconButton:
+                icon: "chevron-left"
+                disabled: root.videoid <= 0
+                on_release:
+                    root.videoid = max(0, root.videoid - 1)
+                    root.actvideo()
+            MDLabel:
+                halign: "center"
+                valign: "middle"
+                text: f"{root.videonom}\n{root.videoid+1}/{root.videolen}"
+            MDIconButton:
+                icon: "chevron-right"
+                disabled: root.videoid + 1 >= root.videolen
+                on_release:
+                    root.videoid = min(root.videolen - 1, root.videoid + 1)
+                    root.actvideo()
+                                
+
+#=========================================================
+<Histovaul>:
+    MDBoxLayout:
+        orientation: "vertical"
+#        VaulNavBar:
+        MDBoxLayout:
+            orientation: "vertical"
+            padding: dp(12)
+            spacing: dp(12)
+            MDBoxLayout:
+                size_hint_y: None
+                height: "40dp"
+                MDIconButton:
+                    icon: "arrow-up-bold"
+                    theme_icon_color: "Custom"
+                    icon_color: app.theme_cls.primary_color
+                    on_release: root.histopath()  
+            MDCard:
+                size_hint_y: None
+                height: self.minimum_height
+                MDLabel:
+                    size_hint_x: 0.1
+                MDCard:
+                    elevation: 1
+                    MDLabel:
+                        text: "Fecha"
+                        size_hint_x: 0.2
+                        font_style: "Body1"
+                MDCard:
+                    elevation: 1
+                    MDLabel:
+                        text: "Acción/Archivo"
+                        size_hint_x: 0.7
+                        font_style: "Body1"
+            MDRecycleView:
+                id: rv_hist_vaul
+                viewclass: "ItemHistVaul"
+                RecycleBoxLayout:
+                    spacing: dp(3)
+                    padding: dp(1)
+                    orientation: 'vertical'
+                    default_size: None, dp(48)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                                  
+
+<ItemHistVaul>:       
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: self.minimum_height  
+    padding: dp(8)
+    spacing: dp(8)
+    elevation: 1
+    MDIcon:
+        icon: root.icono
+        halign: 'center'
+        valign: 'middle'
+        size_hint_x: None
+        width: dp(40)
+        #theme_text_color: "Custom"
+        #text_color: root.color_accion #app.theme_cls.primary_color
+    MDLabel:
+        text: root.fecha
+        font_style: "Body2"
+        size_hint: (0.25, None)
+        height: self.texture_size[1]
+    MDBoxLayout: 
+        orientation: "vertical"
+        size_hint: (0.7, None)
+        height: self.minimum_height  
+        spacing: dp(10)
+        MDLabel:        
+            text: root.action
+            font_style: "Body2"
+            size_hint_y: None
+            height: self.texture_size[1]
+        MDLabel:        
+            text: root.file
+            font_style: "Body2"
+            size_hint_y: None
+            height: self.texture_size[1]
+
+    
+        
+                
+<Vaulwait>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        #VaulNavBar:
+        MDBoxLayout:
+            padding: "15dp"
+            MDCard:
+                padding: "5dp"
+                spacing: "30dp"
+                elevation: 1
+                size_hint: (.9, .6)
+                radius: [24, 24, 24, 24]
+                pos_hint:{'center_x': 0.5, 'center_y': 0.5}
+                orientation: 'vertical'
+                md_bg_color: app.theme_cls.bg_light
+
+                Widget:
+                    size_hint_y: 0.15
+#                MDIcon:
+#                    icon: "cloud-download"
+#                    pos_hint:{'center_x': 0.5, 'center_y': 0.5}
+#                    theme_icon_color: "Custom"
+#                    icon_color: app.theme_cls.primary_color
+#                    font_size: "64sp"
+#                    size_hint_y: 0.15
+                MDSpinner:
+                    size_hint: None, None
+                    size: dp(70), dp(70)
+                    pos_hint: {"center_x": 0.5}
+                    padding: "5dp"
+                    active: True
+                    color: app.theme_cls.primary_color
+                MDProgressBar:
+                    id: pb
+                    value: root.porc
+                    max: 100
+                    size_hint_y: 0.1
+                    color: app.theme_cls.primary_color
+                MDBoxLayout:
+                    size_hint_y: 0.2
+                    spacing: "2dp"
+                    padding: "2dp"
+                    MDLabel:
+                        text:"Cifrando: " if root.cipmodo == "cipher" else "Decifrando: "
+                        bold: True
+                        size_hint_x: 0.2
+                        valign: "center"
+                        theme_text_color: "Primary"
+                    MDLabel:
+                        text: f"{root.porc}%"
+                        size_hint_x: 0.4
+                        valign: "center"
+                        halign: "center"
+                        theme_text_color: "Secondary"
+                    MDLabel:
+                        text: f"{root.vel} MB/s"
+                        size_hint_x: 0.4
+                        valign: "center"
+                        halign: "center"
+                        theme_text_color: "Secondary"
+                Widget:
+                    size_hint_y: 0.1   
+    

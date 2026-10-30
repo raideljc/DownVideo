@@ -1,0 +1,945 @@
+#:import NoTransition kivy.uix.screenmanager.NoTransition
+#:import FadeTransition kivy.uix.screenmanager.FadeTransition
+#:import SlideTransition kivy.uix.screenmanager.SlideTransition
+#['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Subtitle1', 'Subtitle2', 'Body1', 'Body2', 'Button', 'Caption', 'Overline', 'Icon']
+
+<DrawerItem@MDNavigationDrawerItem>:
+    icon: ""
+    text: ""
+    focus_color: app.theme_cls.primary_light
+    text_color: app.theme_cls.text_color
+    icon_color: app.theme_cls.text_color
+    ripple_color: app.theme_cls.primary_light
+    selected_color: app.theme_cls.primary_color
+
+
+<Topbar@MDTopAppBar>:
+    type: "top"
+    elevation: 4
+    pos_hint: {"top": 1}
+    md_bg_color: app.theme_cls.primary_color
+    #specific_text_color: 1, 1, 1, 1
+    right_action_items: [["theme-light-dark", lambda x: app.toggle_dark_mode(not app.darkmode)], ["close", lambda x: app.stop()]]
+
+
+#─────────────────────────────────────────────────────────
+#  ROOT: DownTube
+#─────────────────────────────────────────────────────────
+<DownTube>:
+    md_bg_color: app.theme_cls.bg_normal
+    MDBoxLayout:
+        orientation: "vertical"
+        ScreenManager:
+            id: smmain
+            transition: NoTransition()
+            DownBlock:
+                name: "BlockScreen"
+            DownMain:
+                name: "MainScreen"
+            DownSetting:
+                name: "SettingScreen"
+            DownAbout:
+                name: "AboutScreen"
+            MainVaul:
+                name: "VaulScreen"
+            DownHistory:
+                name: "HistorScreen"
+            DownWait:
+                name: "WaitScreen"
+            DownCheckSum:
+                name: "CheckScreen"
+                
+    MDNavigationDrawer:
+        id: nav_drawer
+        radius: (0, 16, 16, 0)
+        MDNavigationDrawerMenu:
+            MDNavigationDrawerHeader:
+                title: app.appname
+                text: "Menú principal"
+                source: "icon.png"
+                spacing: "4dp"
+                padding: "12dp", 0, 0, "12dp"
+            DrawerItem:
+                icon: "home"
+                text: "Principal"
+                on_release:
+                    app.ChangeScreenMain("MainScreen")
+            DrawerItem:
+                icon: "cog"
+                text: "Ajustes"
+                on_release:
+                    app.ChangeScreenMain("SettingScreen")
+            DrawerItem:
+                icon: "history"
+                text: "Historial"
+                on_release:
+                    app.ChangeScreenMain("HistorScreen")
+            DrawerItem:
+                icon: "information"
+                text: "Acerca de"
+                on_release:
+                    app.ChangeScreenMain("AboutScreen")
+            DrawerItem:
+                opacity: 1 if app.appmode == 3 else 0
+                disabled: app.appmode < 3 
+                icon: "account-lock-outline"
+                text: "Administrador"
+                on_release:
+                    app.ChangeScreenMain("CheckScreen")
+
+#─────────────────────────────────────────────────────────
+#  DOWN MAIN
+#─────────────────────────────────────────────────────────
+<DownMain>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        Topbar:
+            left_action_items: [["menu", lambda x: app.root.ids.nav_drawer.set_state("open")]]
+        MDBoxLayout:
+            padding: "7dp"
+            MDCard:
+                spacing: "10dp"
+                elevation: 4
+                size_hint: (.9, .85)
+                radius: [24, 24, 24, 24]
+                pos_hint:{'center_x': 0.5, 'center_y': 0.5}
+                orientation: 'vertical'
+                padding: ("4dp", "18dp", "4dp", "28dp")
+                md_bg_color: app.theme_cls.bg_light
+                MDLabel:
+                    size_hint_y: .1
+                    text: "Video Downloader"
+                    font_style: "H4"
+                    halign: "center"
+                    valign: "center"
+                    bold: True
+                    theme_text_color: 'Secondary'
+                MDBoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: .13
+                    spacing: "5dp"
+                    MDLabel:
+                        text: "URL del video"
+                        font_style: "Subtitle1"
+                        bold: True
+                        size_hint_y: .3
+                        theme_text_color: "Primary"
+                    MDBoxLayout:
+                        spacing: "5dp"
+                        size_hint_y: .7
+                        MDTextField:
+                            id: url_input
+                            hint_text: "Ej. https://www.youtube.com/..."
+                            mode: "fill"
+                            multiline: False
+                            readonly: app.downloading
+                            size_hint_x: 0.9
+                            on_text: root.cleanall()
+                        MDIconButton:
+                            icon: "magnify"
+                            size_hint_x: 0.12
+                            disabled: app.downloading
+                            on_press: root.cheakpage()
+                            md_bg_color: app.theme_cls.primary_color
+                            theme_icon_color: "Custom"
+                            icon_color: 1, 1, 1, 1
+                MDBoxLayout:
+                    orientation: "vertical"
+                    #padding: "dp"
+                    spacing: "3dp"
+                    size_hint_y: .42
+                    opacity: 1 if root.activated else 0
+                    AsyncImage:
+                        id: miniatura
+                        size_hint_y: .7
+                        keep_ratio: True
+                        allow_stretch: True
+                    MDLabel:
+                        text: root.videoname if root.videoname else "—"
+                        shorten: True
+                        font_style: "Body1"
+                        halign: "center"
+                        size_hint_y: .3
+                        theme_text_color: "Secondary"
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: "16dp"
+                    spacing: "8dp"
+                    size_hint_y: .05
+                    opacity: 1 if root.activated else 0
+                    MDLabel:
+                        text: "Calidad"
+                        font_style: "Subtitle2"
+                        bold: True
+                        size_hint_y: .4
+                        theme_text_color: "Primary"
+                    MDDropDownItem:
+                        id: quality
+                        size_hint_x: .6
+                        pos_hint: {"center_x": .5, "center_y": .5}
+                        text: "Mejor calidad"
+                        disabled: not root.activated
+                        on_release: root.qualitymenu.open()
+                MDFillRoundFlatIconButton:
+                    size_hint_y: 0.08
+                    size_hint_x: 0.8
+                    font_style: "H6"
+                    bold: True
+                    pos_hint: {"center_x": .5}
+                    text: "Descargar"
+                    icon: "download"
+                    opacity: 1 if root.activated else 0
+                    disabled: app.downloading or not root.activated
+                    md_bg_color: app.theme_cls.primary_color
+                    theme_text_color: "Custom"
+                    on_press: root.start_download()
+                    text_color: 1, 1, 1, 1
+
+#─────────────────────────────────────────────────────────
+#  DOWN BLOCK
+#─────────────────────────────────────────────────────────
+<DownBlock>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        Topbar:
+            left_action_items: [["menu", lambda x: app.root.ids.nav_drawer.set_state("open")]] if app.appmode > 0 else []
+        MDBoxLayout:
+            padding: "12dp"
+            MDCard:
+                elevation: 4
+                size_hint: (.9, .7)
+                radius: [24, 24, 24, 24]
+                pos_hint:{'center_x': 0.5, 'center_y': 0.5}
+                orientation: 'vertical'
+                padding: "24dp"
+                spacing: "20dp"
+                md_bg_color: app.theme_cls.bg_light
+
+                MDIcon:
+                    icon: "lock-alert"
+                    halign: "center"
+                    theme_text_color: 'Error'
+                    font_size: "64sp"
+                    pos_hint:{'center_x': 0.5}
+                    size_hint_y: .2
+                MDLabel:
+                    text: "Pida a quien envió esta aplicación que le envíe el Código de desbloqueo para continuar."
+                    font_style: "Body2"
+                    halign: "center"
+                    theme_text_color: "Secondary"
+                    size_hint_y: .15
+                MDSeparator:
+                    color: app.theme_cls.divider_color
+                MDTextField:
+                    text: app.appcode
+                    mode: "fill"
+                    hint_text: "Código de la aplicación"
+                    size_hint_y: .15
+                    multiline: True
+                    readonly: True
+                MDTextField:
+                    id: inpcode
+                    hint_text: "Código de desbloqueo"
+                    text: app.appcheck
+                    mode: "fill"
+#                    icon_right: "key"
+                    size_hint_y: .3
+                    multiline: True
+                
+                MDFillRoundFlatIconButton:
+                    text: "Desbloquear"
+                    icon: "lock-open"
+                    pos_hint: {"center_x": 0.5}
+                    size_hint_y: None
+                    height: dp(48)
+                    on_press: root.unblock()
+                    md_bg_color: app.theme_cls.primary_color
+                    theme_text_color: "Custom"
+                    text_color: 1, 1, 1, 1
+
+
+#─────────────────────────────────────────────────────────
+#  DOWN SETTING
+#─────────────────────────────────────────────────────────
+
+
+<SettingCard@MDCard>:
+    orientation: "vertical"
+    size_hint_y: None
+    height: self.minimum_height
+    padding: dp(12)
+    spacing: dp(10)
+    radius: [dp(12)]
+    elevation: 2
+    md_bg_color: app.theme_cls.bg_light
+
+<DownSetting>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        Topbar:
+            left_action_items: [["menu", lambda x: app.root.ids.nav_drawer.set_state("open")]]
+        ScrollView:
+            do_scroll_x: False
+            MDBoxLayout:
+                orientation: "vertical"
+                padding: "12dp"
+                spacing: "17dp"
+                size_hint_y: None
+                height: self.minimum_height
+#──Carpeta de descarga──────────────────
+                MDCard:
+                    orientation: "vertical"
+                    padding: "7dp"
+                    size_hint_y: None
+                    height: "100dp"
+                    radius: [12, 12, 12, 12]
+                    md_bg_color: app.theme_cls.bg_light
+
+                    MDLabel:
+                        text: "Carpeta de Descarga"
+                        font_style: "Subtitle2"
+                        bold: True
+                        theme_text_color: "Primary"
+                    MDBoxLayout:
+                        spacing: "8dp"
+                        size_hint_y: None
+                        height: "45dp"
+                        MDIconButton:
+                            icon: "folder-search"
+                            size_hint_x: None
+                            width: "48dp"
+                            on_press: root.searchpath()
+                            md_bg_color: app.theme_cls.primary_color
+                            theme_icon_color: "Custom"
+                            icon_color: 1, 1, 1, 1
+                        MDTextField:
+                            id: download_path
+                            text: app.download_path
+                            readonly: True
+                            mode: "fill"
+#──Servidor proxy───────────────────────
+                MDTextField:
+                    id: proxietext
+                    hint_text: "Servidor proxy"
+                    mode: "fill"
+                    icon_right: "server-network"
+#──Modo oscuro──────────────────────────
+                MDBoxLayout:
+                    size_hint_y: None
+                    height: "48dp"
+                    spacing: "12dp"
+                    MDIcon:
+                        icon: "theme-light-dark"
+                        pos_hint: {"center_y": .5}
+                        size_hint_x: None
+                        width: "40dp"
+                        theme_text_color: "Primary"
+                    MDLabel:
+                        text: "Modo oscuro al iniciar"
+                        font_style: "Body1"
+                        valign: "center"
+                        theme_text_color: "Primary"
+                    MDSwitch:
+                        id: darkradio
+                        pos_hint: {"center_y": 0.5}
+                    Widget:
+                        size_hint_x: .1
+                MDSeparator:
+                    color: app.theme_cls.divider_color
+#──Reintentos───────────────────────────
+                MDBoxLayout:
+                    size_hint_y: None
+                    height: "48dp"
+                    MDLabel:
+                        size_hint_x: .7
+                        text: "Reintentos de conexión"
+                        font_style: "Body1"
+                        valign: "center"
+                        halign: "center"
+                        theme_text_color: "Primary"
+                    MDTextField:
+                        size_hint_x: .3
+                        id: retries
+                        input_filter: 'int'
+                        input_type: 'number'  
+                        mode: "fill"
+                        icon_right: "refresh"
+                    Widget:
+                        size_hint_x: .05
+#──geo_bypass───────────────────────────
+                MDBoxLayout:
+                    size_hint_y: None
+                    height: "48dp"
+                    MDLabel:
+                        size_hint_x: .6
+                        text: "geo_bypass"
+                        font_style: "Body1"
+                        valign: "center"
+                        halign: "center"
+                        theme_text_color: "Primary"
+                    MDTextField:
+                        id: geopass
+                        hint_text: " (ej. US, MX)"
+                        mode: "fill"
+                        icon_right: "earth"
+#──Subtítulos───────────────────────────
+                MDBoxLayout:
+                    size_hint_y: None
+                    height: "48dp"
+                    MDLabel:
+                        size_hint_x: .6
+                        text: "Subtítulos"
+                        font_style: "Body1"
+                        valign: "center"
+                        halign: "center"
+                        theme_text_color: "Primary"
+                    MDTextField:
+                        id: subtitles
+                        hint_text: " (ej. es, en)"
+                        mode: "fill"
+                        icon_right: "subtitles"
+                MDSeparator:
+                    color: app.theme_cls.divider_color
+                # ── Colores ──────────────────────────────
+                MDBoxLayout:
+                    size_hint_y: None
+                    height: "48dp"
+                    spacing: "14dp"
+                    MDLabel:
+                        size_hint_x: .6
+                        font_style: "Body1"
+                        valign: "center"
+                        halign: "center"
+                        text: "Color principal"
+                        theme_text_color: "Primary"
+                    MDBoxLayout:
+                        orientation: "vertical"   
+                        MDDropDownItem:
+                            id: maincolor
+                            pos_hint: {"center_x": .5}
+                            on_release: root.colorprin.open()
+                        Slider:
+                            id: mainslider
+                            max: len(root.intensit)-1
+                            on_value: root.set_main_color(maincolor.current_item)
+                    MDCard:
+                        size_hint: None, None
+                        size: dp(34), dp(34)
+                        radius: [dp(17)]    
+                        pos_hint: {"center_y": .5}
+                        md_bg_color: root.maincolor
+#                MDBoxLayout:
+#                    size_hint_y: None
+#                    height: "48dp"
+#                    MDLabel:
+#                        size_hint_x: .6
+#                        font_style: "Body1"
+#                        valign: "center"
+#                        halign: "center"
+#                        text: "Color secundario"
+#                        theme_text_color: "Primary"
+#                    MDDropDownItem:
+#                        id: seccolor
+#                        #text: "---------------"
+#                        pos_hint: {"center_x": .5}
+#                        on_release: root.colorsec.open()
+                MDSeparator:
+                    color: app.theme_cls.divider_color
+                # ── Código de activación ─────────────────
+                MDBoxLayout:
+                    size_hint_y: None
+                    height: "56dp"
+                    spacing: "12dp"
+                    MDIcon:
+                        icon: "key"
+                        pos_hint: {"center_y": .5}
+                        size_hint_x: None
+                        width: "40dp"
+                        theme_text_color: "Primary"
+                    MDLabel:
+                        text: "Código de Activación"
+                        font_style: "Body1"
+                        valign: "center"
+                        theme_text_color: "Primary"
+                    MDFillRoundFlatIconButton:
+                        text: "Cambiar"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color
+                        text_color: 1, 1, 1, 1
+                        icon: "lock-open"
+                        pos_hint: {"center_y": 0.5}
+                        on_release: app.ChangeScreenMain("BlockScreen")
+                MDSeparator:
+                    color: app.theme_cls.divider_color
+# ─ comportamiento Historial ──────────
+                MDCard:
+                    orientation: "vertical"
+                    padding: "7dp"
+                    spacing: "14dp"
+                    size_hint_y: None
+                    height: "260dp"
+                    radius: [12, 12, 12, 12]
+                    md_bg_color: app.theme_cls.bg_light
+
+                    MDLabel:
+                        text: "Historial"
+                        font_style: "Body1"
+                        bold: True
+                        valign: "center"
+                        halign: "center"
+                        theme_text_color: "Primary"
+
+                    MDBoxLayout:
+                        size_hint_y: None
+                        height: "35dp"
+                        MDLabel:
+                            size_hint_x: .7
+                            text: "Filas por página"
+                            font_style: "Body1"
+                            valign: "center"
+                            halign: "center"
+                            theme_text_color: "Primary"
+                        MDTextField:
+                            size_hint_x: .3
+                            id: pagesfiles
+                            input_filter: 'int'
+                            input_type: 'number'  
+                            mode: "fill"
+                            valign: "center"
+                            text: "1"
+                            icon_right: "format-list-numbered"
+                        
+                        Widget:
+                            size_hint_x: .05
+                    MDBoxLayout:
+                        spacing: "8dp"
+                        size_hint_y: None
+                        height: "40dp"
+                        MDLabel:
+                            text: "Inicio de la aplicación"
+                            font_style: "Body1"
+                            valign: "center"
+                            halign: "center"
+                            theme_text_color: "Primary"
+                        MDSwitch:
+                            id: startradio
+                            pos_hint: {"center_y": 0.5}
+                        Widget:
+                            size_hint_x: .05
+
+                    MDBoxLayout:
+                        spacing: "8dp"
+                        size_hint_y: None
+                        height: "40dp"
+                        MDLabel:
+                            text: "Fin de la aplicación"
+                            font_style: "Body1"
+                            valign: "center"
+                            halign: "center"
+                            theme_text_color: "Primary"
+                        MDSwitch:
+                            id: endradio
+                            pos_hint: {"center_y": 0.5}
+                        Widget:
+                            size_hint_x: .05
+
+                    MDBoxLayout:
+                        size_hint_y: None
+                        height: "40dp"
+                        spacing: "8dp"
+                        MDLabel:
+                            text: "Cambiar Configuración"
+                            font_style: "Body1"
+                            valign: "center"
+                            halign: "center"
+                            theme_text_color: "Primary"
+                        MDSwitch:
+                            id: settingradio
+                            pos_hint: {"center_y": 0.5}
+                        Widget:
+                            size_hint_x: .05
+
+# ── Botones finales ──────────────────────
+                
+                MDBoxLayout:
+                    size_hint_y: None
+                    height: dp(60)
+                    spacing: dp(12)
+
+                    MDFillRoundFlatIconButton:
+                        id: btn
+                        text: "Guardar"
+                        icon: "content-save"
+                        font_style: 'Button'
+                        on_press: root.guardar()
+                        md_bg_color: app.theme_cls.primary_color
+                        theme_text_color: "Custom"
+                        text_color: 1, 1, 1, 1
+
+                    MDFillRoundFlatIconButton:
+                        text: "Limpiar"
+                        icon: "broom"
+                        font_style: "Body1"
+                        on_press: root.resetresetscreen()
+                        md_bg_color: app.theme_cls.error_color
+                        theme_text_color: "Custom"
+                        text_color: 1, 1, 1, 1
+
+                Widget:
+                    size_hint_y: None
+                    height: dp(20)
+
+
+#─────────────────────────────────────────────────────────
+#  ITEM HISTORIAL
+#─────────────────────────────────────────────────────────
+<ItemHist>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: dp(75)
+    padding: dp(8), dp(4), dp(8), dp(4)
+    spacing: dp(3)
+    elevation: 1
+    radius: [dp(8)]
+    md_bg_color: app.theme_cls.bg_light if root.index % 2 == 1 else app.theme_cls.bg_normal
+    
+    MDIcon:
+        icon: root.icon if root.icon else "file"
+        halign: 'center'
+        valign: 'middle'
+        size_hint_x: None
+        width: dp(36)
+        theme_text_color: "Custom"
+        text_color: root.color_accion
+        pos_hint: {"center_y": 0.5}
+    
+    MDLabel:
+        text: root.fecha
+        font_style: "Body2"
+        valign: "middle"
+        size_hint_x: 0.28
+        theme_text_color: "Secondary"
+#        shorten: True
+    
+    MDLabel:
+        text: root.accion
+        font_style: "Body2"
+        valign: "middle"
+        size_hint_x: 0.34
+        theme_text_color: "Primary"
+#        bold: True
+#        shorten: True
+    
+    MDLabel:
+        text: root.extra
+        font_style: "Body2"
+        valign: "middle"
+        size_hint_x: 0.38
+        theme_text_color: "Secondary"
+#        shorten: True
+#        shorten_from: "right"         #─────────────────────────────────────────────────────────
+#  DOWN HISTORY
+#─────────────────────────────────────────────────────────
+<DownHistory>:
+    MDBoxLayout:
+        orientation: "vertical"
+        spacing: "10dp"
+        Topbar:
+            left_action_items: [["menu", lambda x: app.root.ids.nav_drawer.set_state("open")]]
+        MDBoxLayout:
+            size_hint_y: None
+            height: "56dp"
+            spacing: "8dp"
+            MDLabel:
+                text: "Historial"
+                font_style: "H6"
+                valign: "middle"
+            MDIconButton:
+                icon: "download"
+                on_release: root.histopath()
+            MDIconButton:
+                icon: "delete-sweep"
+                on_release: root.erasehisto()
+        MDBoxLayout:
+            radius: [16,]
+            padding: "4dp"
+            MDBoxLayout:
+                orientation: "vertical"
+                spacing: "3dp"
+                MDCard:
+                    #md_bg_color: app.theme_cls.primary_color
+                    radius: [16,]
+                    elevation: 2
+                    size_hint_y: None
+                    height: "56dp"
+                    padding: ["12dp", "3dp"]
+                    spacing: "8dp"
+                    MDLabel:
+                        size_hint_x:0.1
+                    MDBoxLayout:
+                        size_hint_x:0.3
+                        elevation: 0
+                        radius: [dp(8)]
+                        MDLabel:
+                            text: 'Fecha'
+                            bold: True
+                            pos_hint: {"center_y": 0.5,"center_x": 0.5}
+                    MDBoxLayout:
+                        size_hint_x:0.3
+                        MDLabel:
+                            text: "Acción"
+                            bold: True
+                            pos_hint: {"center_y": 0.5,"center_x": 0.5}
+                    MDBoxLayout:
+                        size_hint_x:0.3
+                        MDLabel:
+                            bold: True
+                            pos_hint: {"center_y": 0.5,"center_x": 0.5}
+                            text: "Extra"
+                MDBoxLayout:
+                    size_hint_y: None
+                    height: "40dp"
+                    MDIconButton:
+                        icon: "chevron-left"
+                        disabled: root.page == 0
+                        on_release:
+                            root.page = root.page - 1
+                            root.showhist()
+                    MDLabel:
+                        opacity: 1 if root.histolen>0 else 0
+                        text: f" {root.page * app.pagelen +1} - {min((root.page+1) * app.pagelen, root.histolen)} " 
+                        halign: "center"
+                    MDIconButton:
+                        icon: "chevron-right"
+                        disabled: (root.page+1) * app.pagelen >= root.histolen
+                        on_release:
+                            root.page = root.page+1
+                            root.showhist()
+                MDSeparator:
+                    color: app.theme_cls.divider_color
+                MDRecycleView:
+                    id: rv_hist
+                    viewclass: "ItemHist"
+                    RecycleBoxLayout:
+                        spacing: "5dp"
+                        padding: "5dp"
+                        orientation: 'vertical'
+                        default_size: None, dp(48)
+                        default_size_hint: 1, None
+                        size_hint_y: None
+                        height: self.minimum_height  
+
+#─────────────────────────────────────────────────────────
+#  DOWN ABOUT
+#─────────────────────────────────────────────────────────
+<DownAbout>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        Topbar:
+            left_action_items: [["menu", lambda x: app.root.ids.nav_drawer.set_state("open")]]
+        MDBoxLayout:
+            padding: "15dp"
+            MDCard:
+                padding: "20dp"
+                spacing: "10dp"
+                elevation: 1
+                size_hint: (.9, .85)
+                radius: [24, 24, 24, 24]
+                pos_hint:{'center_x': 0.5, 'center_y': 0.5}
+                orientation: 'vertical'
+                md_bg_color: app.theme_cls.bg_light
+
+                MDLabel:
+                    text: "ACERCA DE"
+                    font_style: "H4"
+                    bold: True
+                    halign: "center"
+                    size_hint_y: 0.15
+                    theme_text_color: "Primary"
+                Image:
+                    source: "icon.png"
+                    size_hint_y: 0.25
+                MDLabel:
+                    text: app.appname
+                    font_style: "H5"
+                    halign: "center"
+                    size_hint_y: 0.1
+                    theme_text_color: "Primary"
+                MDLabel:
+                    text: "Aplicación para descarga videos de YouTube, Facebook, Instagram, TikTok y otras redes sociales. \nDesarrollada con python y yt-dpl."
+                    font_style: "Body1"
+                    halign: "center"
+                    theme_text_color: "Secondary"
+                    size_hint_y: 0.15
+                MDLabel:
+                    text: 'Desarrollado por: Raideljc \n© 2026 Todos los derechos reservados'
+                    font_style: "Body1"
+                    size_hint_y: 0.1
+                    theme_text_color: "Secondary"
+                MDSeparator:
+                    halign: "center"
+                    color: app.theme_cls.divider_color
+                    size_hint_y: 0.01
+                MDFlatButton:
+                    text: f"Versión {app.version}.0" if app.appmode >= 2 else f"Versión {app.version}"
+                    bold: True
+                    hint_animation: False
+                    ripple_effect: False
+                    md_bg_color: 0, 0, 0, 0
+                    elevation: 0
+                    pos_hint: {"center_x": 0.5}
+                    size_hint_y: 0.05
+                    on_press: root.setsettime()
+                    on_release: root.cheaktime()
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.primary_color
+                    font_style: "Button"
+                    halign: "center"
+
+
+#─────────────────────────────────────────────────────────
+#  DOWN WAIT
+#─────────────────────────────────────────────────────────
+
+<DownWait>:
+    MDBoxLayout:
+        orientation: 'vertical'
+        Topbar:
+        MDBoxLayout:
+            padding: "15dp"
+            MDCard:
+                padding: "20dp"
+                spacing: "30dp"
+                elevation: 1
+                size_hint: (.9, .6)
+                radius: [24, 24, 24, 24]
+                pos_hint:{'center_x': 0.5, 'center_y': 0.5}
+                orientation: 'vertical'
+                md_bg_color: app.theme_cls.bg_light
+
+                Widget:
+                    size_hint_y: 0.15
+                MDIcon:
+                    icon: "cloud-download"
+                    pos_hint:{'center_x': 0.5, 'center_y': 0.5}
+                    theme_icon_color: "Custom"
+                    icon_color: app.theme_cls.primary_color
+                    font_size: "64sp"
+                    size_hint_y: 0.15
+                MDSpinner:
+                    size_hint: None, None
+                    size: dp(70), dp(70)
+                    pos_hint: {"center_x": 0.5}
+                    padding: "5dp"
+                    active: True
+                    color: app.theme_cls.primary_color
+                MDProgressBar:
+                    id: pb
+                    value: app.downprogress
+                    max: 100
+                    size_hint_y: 0.1
+                    color: app.theme_cls.primary_color
+                MDBoxLayout:
+                    size_hint_y: 0.2
+                    spacing: "28dp"
+                    padding: "28dp", 0,"28dp", 0
+                    MDIcon:
+                        icon: "information"
+                        size_hint_x: 0.1
+                        pos_hint: {"center_y": 0.5}
+                        theme_text_color: "Primary"
+                    MDLabel:
+                        text: "Estado:"
+                        bold: True
+                        size_hint_x: 0.3
+                        valign: "center"
+                        theme_text_color: "Primary"
+                    MDLabel:
+                        text: app.status
+                        size_hint_x: 0.6
+                        valign: "center"
+                        theme_text_color: "Secondary"
+                MDBoxLayout:
+                    size_hint_y: 0.2
+                    spacing: "28dp"
+                    padding: "28dp", 0,"28dp", 0
+                    MDIcon:
+                        icon: "timer-sand"
+                        size_hint_x: 0.1
+                        theme_text_color: "Primary"
+                    MDLabel:
+                        text: "Falta:"
+                        bold: True
+                        size_hint_y: 0.1
+                        valign: "center"
+                        theme_text_color: "Primary"
+                    MDLabel:
+                        size_hint_y: 0.1
+                        text: app.downless
+                        valign: "center"
+                        theme_text_color: "Secondary"
+                Widget:
+                    size_hint_y: 0.1
+                    
+#─────────────────────────────────────────────────────────
+#  DOWN Check Sum
+#─────────────────────────────────────────────────────────                    
+<DownCheckSum>:
+    MDBoxLayout:
+        orientation: "vertical"
+        Topbar:
+            left_action_items: [["menu", lambda x: app.root.ids.nav_drawer.set_state("open")]]
+        MDBoxLayout:
+            orientation: "vertical"
+            padding: dp(30)
+            spacing: dp(20)
+            pos_hint: {"center_y": 0.5,"center_x": 0.5}
+            MDBoxLayout:
+                size_hint_y:0.2
+                orientation: "vertical"
+                MDLabel:
+                    size_hint_y:0.4
+                    text: "Código de la Aplicación" 
+                MDTextField:
+                    size_hint_y:0.6
+                    id: input
+                    mode: "fill"
+                    multiline: True
+            MDBoxLayout:
+                size_hint_y:0.1
+                orientation: "vertical"
+                MDFillRoundFlatIconButton:
+                    size_hint_x: 1
+                    text: "Generar"
+                    on_release: root.check() 
+            MDBoxLayout:
+                size_hint_y:0.05
+                orientation: "vertical"
+                MDLabel:
+                    text: root.anterior
+            MDBoxLayout:
+                size_hint_y:0.3
+                orientation: "vertical"
+                padding: 5
+                MDLabel:
+                    size_hint_y:0.2
+                    text: "Modo Estándar" 
+                MDTextField:
+                    size_hint_y:0.8
+                    text: root.sal1
+                    readonly: True
+                    mode: "fill"
+                    multiline: True
+            MDBoxLayout:
+                size_hint_y:0.3
+                orientation: "vertical"
+                MDLabel:
+                    size_hint_y:0.2
+                    text: "Modo Avanzado" 
+                MDTextField:
+                    size_hint_y:0.8
+                    text: root.sal2
+                    readonly: True
+                    mode: "fill"
+                    multiline: True
+                      
