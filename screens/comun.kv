@@ -1,0 +1,43 @@
+<FilePopup>:
+    size_hint: 0.9, 0.9
+    #md_bg_color: app.theme_cls.bg_normal
+    title: "" 
+    MDBoxLayout:
+        #size_hint: 0.9, 0.9
+        orientation: 'vertical'
+        #md_bg_color: app.theme_cls.bg_normal
+        radius: [16, 16, 0, 0]
+        padding: dp(12)
+        spacing: dp(12)
+
+        MDLabel:
+            text: root.texto
+            bold: True
+            text_color: (1, 1, 1, 0.9)#app.theme_cls.text_color
+            font_style: "Subtitle1"
+            size_hint_y: None
+            height: dp(40)
+
+        FileChooserListView:
+            size_hint_y: 0.85
+            id: fc
+            path: root.start_path
+            filters: [root.filter]
+            dirselect: root.dir_mode
+
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(56)
+            spacing: dp(12)
+            padding: dp(8)
+
+            MDFlatButton:
+                text: 'Cancelar'
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.error_color
+                on_release: root.dismiss()
+
+            MDRaisedButton:
+                text: 'OK'
+                md_bg_color: app.theme_cls.primary_color
+                on_release: root.aceptar(fc)
