@@ -1,6 +1,6 @@
 [app]
-title = DownTube
-package.name = downtube
+title = DownVideo
+package.name = downvideo
 package.domain = org.raideljc
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,json,ttf, txt
