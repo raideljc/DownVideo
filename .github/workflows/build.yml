@@ -37,10 +37,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-     # - name: Clean previous build
-     #   run: |
-     #      rm -rf .buildozer
-     #     rm -rf $HOME/.buildozer
+      - name: Clean previous build
+        run: |
+           rm -rf .buildozer
+           rm -rf $HOME/.buildozerrm 
+           rm -rf $HOME/.buildozer/android/platform/python-for-android
+           rm -rf $HOME/.buildozer/android/platform/android-ndk-*
 
       - name: Build APK
         run: |
