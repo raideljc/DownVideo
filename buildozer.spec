@@ -5,7 +5,8 @@ package.domain = org.raideljc
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,json,ttf, txt
 version = 0.10.0
-requirements = python3,kivy==2.3.0,ffpyplayer==v4.5.0,kivymd==1.2.0,yt-dlp,cryptography,requests,urllib3,charset-normalizer,idna,certifi
+requirements = python3,kivy==2.3.0,ffpyplayer,kivymd==1.2.0,yt-dlp,cryptography,requests,urllib3,charset-normalizer,idna,certifi
+#requirements = python3,kivy==2.3.0,ffpyplayer==v4.5.0,kivymd==1.2.0,yt-dlp,cryptography,requests,urllib3,charset-normalizer,idna,certifi
 #,ffpyplayer
 ###source.exclude_dirs = bin, .buildozer, __pycache__, .git, ffmpg
 android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, ACCESS_NETWORK_STATE
